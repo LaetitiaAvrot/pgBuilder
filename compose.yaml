@@ -1,0 +1,51 @@
+# Settings, all optional (the Makefile sets them for you):
+#   PGSRC        postgres checkout, default ../postgresql
+#   PG_USER      runtime superuser, default postgres
+#   PG_DATABASE  runtime database, default postgres
+
+services:
+  # Hacking environment: docker compose run --rm dev
+  dev:
+    profiles: [dev]
+    build:
+      context: .
+      target: dev
+    image: pg-dev
+    init: true
+    stdin_open: true
+    tty: true
+    # Needed to attach gdb to backends
+    cap_add:
+      - SYS_PTRACE
+    # Docker defaults to 64MB, too small for parallel query
+    shm_size: 256m
+    volumes:
+      - ${PGSRC:-../postgresql}:/src
+      # Build tree and install, in a volume because bind mounts are slow
+      # on macOS
+      - pgwork:/work
+      - ccache:/home/dev/.ccache
+
+  # Runtime image built from the checkout: docker compose up -d --build
+  runtime:
+    build:
+      context: .
+      target: runtime
+      additional_contexts:
+        pgsrc: ${PGSRC:-../postgresql}
+      # Extra meson options, for example "-Dcassert=true"
+      args:
+        PG_MESON_ARGS: ${PG_MESON_ARGS:-}
+    image: pg-runtime
+    shm_size: 256m
+    # Only used when the data volume is initialized
+    environment:
+      PGUSER: ${PG_USER:-postgres}
+      PGDATABASE: ${PG_DATABASE:-postgres}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgwork:
+  ccache:
+  pgdata:

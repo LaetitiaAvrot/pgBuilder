@@ -1,0 +1,7 @@
+# Copy to config.mk to keep your settings. config.mk is not committed.
+# Command line values still win: make build PGSRC=...
+
+PGSRC = $(HOME)/src/postgresql
+PG_USER = postgres
+PG_DATABASE = $(PG_USER)
+# PG_MESON_ARGS = -Dllvm=enabled
