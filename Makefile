@@ -37,7 +37,7 @@ DEV_SETUP := mode=; \
         dev-clean runtime-image up psql logs stop down reset clean
 
 help: ## Show this list
-	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) \
+	@grep -hE '^[a-z-]+:.*## ' $(MAKEFILE_LIST) \
 	  | awk -F ':.*## ' '{ printf "  %-14s %s\n", $$1, $$2 }'
 
 src: ## Clone postgres into PGSRC if it is not there yet
