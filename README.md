@@ -89,8 +89,9 @@ Meson refuses a checkout that contains an in-tree autoconf build. Run
 
 - The checkout is bind mounted into the build, never copied, so `.git` does
   not end up in an image layer.
-- ccache persists between builds in a BuildKit cache mount, so rebuilds
-  after a change are fast.
+- The build tree and ccache persist between builds in BuildKit cache
+  mounts, so ninja only recompiles what changed and rebuilds are fast. To
+  force a clean build, run `docker builder prune --filter type=exec.cachemount`.
 - The final image only contains the installed binaries and the Debian
   packages they link against, detected automatically.
 - On first start, the entrypoint creates `PG_USER` as superuser without

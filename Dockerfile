@@ -60,7 +60,8 @@ CMD ["bash"]
 # Build stage for the runtime image
 # The checkout is bind mounted from the "pgsrc" named context instead of
 # copied, so .git never ends up in a layer. Writes to it are discarded.
-# ccache persists across builds in a BuildKit cache mount.
+# The build tree and ccache persist across builds in BuildKit cache mounts,
+# so ninja only recompiles and relinks what changed.
 # ---------------------------------------------------------------------------
 FROM builddeps AS build
 
@@ -69,10 +70,13 @@ ENV CCACHE_DIR=/ccache
 
 RUN --mount=type=bind,from=pgsrc,target=/src,rw \
     --mount=type=cache,target=/ccache \
+    --mount=type=cache,target=/build \
     if [ -f /src/src/include/pg_config.h ]; then \
       make -C /src distclean >/dev/null; \
     fi \
- && meson setup /build /src \
+ && mode= \
+ && if [ -f /build/meson-private/coredata.dat ]; then mode=--reconfigure; fi \
+ && meson setup $mode /build /src \
       --prefix=/usr/local/pgsql \
       ${PG_MESON_FEATURES} \
       ${PG_MESON_ARGS} \
