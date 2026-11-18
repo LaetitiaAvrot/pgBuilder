@@ -15,10 +15,14 @@ You need Docker with Compose and a PostgreSQL checkout. By default it is
 looked for in `../postgresql`.
 
 ```sh
-git clone https://git.postgresql.org/git/postgresql.git ../postgresql
+make src        # clone PostgreSQL into ../postgresql if it is not there
 make build      # configure, compile and install a debug build
 make tmp        # psql on a throwaway cluster running your build
 ```
+
+Already have a checkout elsewhere? Skip `make src` and pass its location:
+`make build PGSRC=$HOME/src/postgresql`. See [Settings](#settings) to keep it
+in `config.mk`.
 
 ## Most useful commands
 
@@ -26,6 +30,7 @@ Run `make` to list every command.
 
 | Command | What it does |
 | --- | --- |
+| `make src` | Clone PostgreSQL into `PGSRC` if it is missing. |
 | `make build` | Compile and install your changes. Configures the first time. |
 | `make test` | Run all tests, regression and TAP. |
 | `make test TEST_ARGS="--suite regress"` | Run only some tests, much faster. |
@@ -43,7 +48,9 @@ A typical loop: edit on the host, `make build`, try it with `make tmp`, then
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `PGSRC` | `../postgresql` | PostgreSQL checkout. Nothing is written to it. |
+| `PGSRC` | `../postgresql` | PostgreSQL checkout. Nothing is written to it, except by `make src` when it clones. |
+| `PG_REPO` | `https://git.postgresql.org/git/postgresql.git` | Where `make src` clones from. |
+| `PG_CLONE_ARGS` | `--filter=blob:none` | Extra `git clone` options for `make src`, for example `--depth 1`. |
 | `PG_USER` | `postgres` | Runtime superuser. |
 | `PG_DATABASE` | same as `PG_USER` | Runtime database, created on first start. |
 | `PG_MESON_ARGS` | | Extra meson options, for example `-Dllvm=enabled`. |

@@ -2,6 +2,8 @@
 # Command line values still win: make build PGSRC=...
 
 PGSRC = $(HOME)/src/postgresql
+# PG_REPO = https://github.com/postgres/postgres.git
+# PG_CLONE_ARGS = --depth 1
 PG_USER = postgres
 PG_DATABASE = $(PG_USER)
 # PG_MESON_ARGS = -Dllvm=enabled

@@ -2,7 +2,9 @@
 #
 # Variables:
 #   PGSRC          postgres checkout, default ../postgresql
-#   PG_USER        runtime superuser, default postgres
+#   PG_REPO        where "make src" clones from
+#   PG_CLONE_ARGS  extra git clone options, default a blobless partial clone
+#   PG_USER       runtime superuser, default postgres
 #   PG_DATABASE    runtime database, default PG_USER
 #   PG_MESON_ARGS  extra meson options, for example "-Dllvm=enabled"
 #   TEST_ARGS      arguments for meson test, for example "--suite regress"
@@ -12,6 +14,8 @@
 
 PGSRC ?= ../postgresql
 override PGSRC := $(abspath $(PGSRC))
+PG_REPO ?= https://git.postgresql.org/git/postgresql.git
+PG_CLONE_ARGS ?= --filter=blob:none
 PG_USER ?= postgres
 PG_DATABASE ?= $(PG_USER)
 PG_MESON_ARGS ?=
@@ -29,17 +33,28 @@ DEV_SETUP := mode=; \
     $$PG_MESON_FEATURES $(PG_MESON_ARGS)
 
 .DEFAULT_GOAL := help
-.PHONY: help check-src dev-image dev shell setup build test docs tmp \
+.PHONY: help src check-src dev-image dev shell setup build test docs tmp \
         dev-clean runtime-image up psql logs stop down reset clean
 
 help: ## Show this list
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) \
 	  | awk -F ':.*## ' '{ printf "  %-14s %s\n", $$1, $$2 }'
 
+src: ## Clone postgres into PGSRC if it is not there yet
+	@if [ -f "$(PGSRC)/meson.build" ]; then \
+	  echo "Using existing checkout in $(PGSRC)"; \
+	elif [ -e "$(PGSRC)" ] && [ -n "$$(ls -A "$(PGSRC)")" ]; then \
+	  echo "$(PGSRC) exists but is not a postgres checkout."; \
+	  exit 1; \
+	else \
+	  git clone $(PG_CLONE_ARGS) $(PG_REPO) "$(PGSRC)"; \
+	fi
+
 check-src:
 	@[ -f "$(PGSRC)/meson.build" ] || { \
 	  echo "No postgres checkout in $(PGSRC)."; \
-	  echo "Clone it there or run: make <target> PGSRC=/path/to/postgresql"; \
+	  echo "Run: make src"; \
+	  echo "Or point to yours: make <target> PGSRC=/path/to/postgresql"; \
 	  exit 1; }
 
 # ---------------------------------------------------------------------------
